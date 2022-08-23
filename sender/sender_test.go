@@ -62,6 +62,47 @@ func getTestDatas() []Data {
 	return testDatas
 }
 
+func TestData_AddMetricNameToLable(t *testing.T) {
+	testDatas := getTestDatas()
+
+	type fields struct {
+		Metric  prompb.MetricMetadata
+		Lables  []prompb.Label
+		Samples []prompb.Sample
+	}
+	tests := []struct {
+		name   string
+		fields fields
+		want   Data
+	}{
+		{"",
+			fields{
+				Metric:  testDatas[0].Metric,
+				Lables:  testDatas[0].Lables,
+				Samples: testDatas[0].Samples,
+			},
+			Data{
+				Metric:  testDatas[0].Metric,
+				Lables:  append(testDatas[0].Lables, prompb.Label{Name: "__name__", Value: testDatas[0].Metric.MetricFamilyName}),
+				Samples: testDatas[0].Samples,
+			},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			d := &Data{
+				Metric:  tt.fields.Metric,
+				Lables:  tt.fields.Lables,
+				Samples: tt.fields.Samples,
+			}
+			d.AddMetricNameToLable()
+			if !reflect.DeepEqual(*d, tt.want) {
+				t.Errorf("data %v not equal want data %v", *d, tt.want)
+			}
+		})
+	}
+}
+
 func Test_cutDatasToBatch(t *testing.T) {
 	testDatas := getTestDatas()
 
@@ -330,6 +371,9 @@ LOOP:
 				got[i].Metric = req.Metadata[i]
 				got[i].Lables = req.Timeseries[i].Labels
 				got[i].Samples = req.Timeseries[i].Samples
+			}
+			for i := range tt.want {
+				(&tt.want[i]).AddMetricNameToLable()
 			}
 			if !reflect.DeepEqual(got, tt.want) {
 				http.Error(w,

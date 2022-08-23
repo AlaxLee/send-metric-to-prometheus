@@ -123,6 +123,7 @@ func addDatasToWriteRequest(datas []Data) *prompb.WriteRequest {
 		Metadata:   make([]prompb.MetricMetadata, datasNumber),
 	}
 	for i := 0; i < datasNumber; i++ {
+		datas[i].AddMetricNameToLable()
 		wr.Metadata[i] = datas[i].Metric
 		wr.Timeseries[i] = prompb.TimeSeries{Labels: datas[i].Lables, Samples: datas[i].Samples}
 	}

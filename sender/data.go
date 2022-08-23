@@ -28,3 +28,15 @@ func (d *Data) Swap(i, j int) {
 func (d *Data) Sort() {
 	sort.Sort(d)
 }
+func (d *Data) AddMetricNameToLable() {
+	existed := false
+	for _, l := range d.Lables {
+		if l.Name == "__name__" {
+			existed = true
+			break
+		}
+	}
+	if !existed {
+		d.Lables = append(d.Lables, prompb.Label{Name: "__name__", Value: d.Metric.MetricFamilyName})
+	}
+}
